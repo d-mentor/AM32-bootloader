@@ -46,14 +46,7 @@ jobs:
           tag_name: nes80a-latest
           name: NES 80A bootloader - latest build
           body: |
-            Auto build. branch `${{ github.ref_name }}`, commit `${{ github.sha }}`
-
-            | file | layout | matching firmware |
-            |---|---|---|
-            | AM32_L431_BOOTLOADER_PA2_V19.hex | 4KB, app @0x08001000 | AM32_NES_80A_L431_2.22.hex |
-            | AM32_L431_BOOTLOADER_NES80A_CAN_V19.hex | 16KB, app @0x08004000 | AM32_NES_80A_L431_CAN_2.22.hex |
-
-            Do not mix the two pairs. Flash order: bootloader first.
+            Auto build from branch ${{ github.ref_name }}
           prerelease: true
           make_latest: false
           overwrite_files: true
