@@ -1,0 +1,63 @@
+name: NES 80A build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install ARM toolchain
+        run: make arm_sdk_install
+
+      - name: Build PWM/DShot target
+        run: make -j8 NES_80A_L431
+
+      - name: Build CAN target
+        run: make -j8 NES_80A_L431_CAN
+
+      - name: Show sizes
+        if: always()
+        run: ls -la obj/ | grep -i NES || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NES-80A-hex
+          path: |
+            obj/AM32_NES_80A_L431_*.hex
+            obj/AM32_NES_80A_L431_*.bin
+          retention-days: 90
+
+      - name: Update rolling release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nes80a-latest
+          name: NES 80A - latest build
+          body: |
+            Auto build. branch `${{ github.ref_name }}`, commit `${{ github.sha }}`
+
+            | file | use |
+            |---|---|
+            | AM32_NES_80A_L431_2.22.hex | PWM/DShot firmware (4KB bootloader) |
+            | AM32_NES_80A_L431_CAN_2.22.hex | DroneCAN firmware (16KB bootloader) |
+
+            Flash order: bootloader first, then firmware.
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            obj/AM32_NES_80A_L431_*.hex
+            obj/AM32_NES_80A_L431_*.bin
